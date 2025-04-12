@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Xarrow from 'react-xarrows';
 
 // Random strings for each category
-const businessStrings = [
+const marketStrings = [
   "Market Research",
   "Funding Round",
   "International Expansion",
@@ -63,11 +63,11 @@ const Home: React.FC = () => {
   const [showRoadmap, setShowRoadmap] = useState(false);
   const [messages, setMessages] = useState<{type: 'user' | 'ai', content: string}[]>([]);
   const [roadmapContent, setRoadmapContent] = useState<{
-    business: string[],
+    market: string[],
     product: string[],
     tech: string[]
   }>({
-    business: [],
+    market: [],
     product: [],
     tech: []
   });
@@ -89,29 +89,29 @@ const Home: React.FC = () => {
     
     // Initialize roadmap content with random data if none exists
     if (showRoadmap && 
-        roadmapContent.business.length === 0 && 
+        roadmapContent.market.length === 0 && 
         roadmapContent.product.length === 0 && 
         roadmapContent.tech.length === 0) {
       
       // Generate random number of items (between 3-6) for each category
-      const businessCount = getRandomNumber(3, 6);
+      const marketCount = getRandomNumber(3, 6);
       const productCount = getRandomNumber(3, 6);
       const techCount = getRandomNumber(3, 6);
       
       // Get random items for each category
-      const business = getRandomItems(businessStrings, businessCount);
+      const market = getRandomItems(marketStrings, marketCount);
       const product = getRandomItems(productStrings, productCount);
       const tech = getRandomItems(techStrings, techCount);
       
       // Update roadmap content
       setRoadmapContent({
-        business,
+        market,
         product,
         tech
       });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showRoadmap, roadmapContent.business.length, roadmapContent.product.length, roadmapContent.tech.length]);
+  }, [showRoadmap, roadmapContent.market.length, roadmapContent.product.length, roadmapContent.tech.length]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(e.target.value);
@@ -139,18 +139,18 @@ const Home: React.FC = () => {
     if (!inputText.trim()) return;
     
     // Generate random number of items (between 3-6) for each category
-    const businessCount = getRandomNumber(3, 6);
+    const marketCount = getRandomNumber(3, 6);
     const productCount = getRandomNumber(3, 6);
     const techCount = getRandomNumber(3, 6);
     
     // Get random items for each category
-    const business = getRandomItems(businessStrings, businessCount);
+    const market = getRandomItems(marketStrings, marketCount);
     const product = getRandomItems(productStrings, productCount);
     const tech = getRandomItems(techStrings, techCount);
     
     // Update roadmap content
     setRoadmapContent({
-      business,
+      market,
       product,
       tech
     });
@@ -216,7 +216,7 @@ const Home: React.FC = () => {
         ) : (
           <div className="roadmap-container">
             <div className="roadmap-image">
-              <div className="business-roadmap">
+              <div className="market-roadmap">
                 <div className="roadmap-header">
                   <div className="time-arrow">
                     <div className="time-label">TIME</div>
@@ -226,24 +226,29 @@ const Home: React.FC = () => {
                 
                 <div className="roadmap-content">
                   <div className="categories">
-                    <div className="category">BUSINESS</div>
+                    <div className="category">MARKET</div>
                     <div className="category">PRODUCT</div>
                     <div className="category">TECH</div>
                   </div>
                   
+                  <div className="category-divider"></div>
+                  
                   <div className="roadmap-grid">
-                    {/* Business/Market Row */}
-                    <div className="grid-row business-row">
-                      {roadmapContent.business.map((item, index) => (
+                    {/* Market Row */}
+                    <div className="grid-row market-row">
+                      {roadmapContent.market.map((item, index) => (
                         <div 
-                          key={`b${index}`} 
-                          className="node business-node" 
-                          id={`b${index}`}
+                          key={`m${index}`} 
+                          className="node market-node" 
+                          id={`m${index}`}
                         >
                           {item}
                         </div>
                       ))}
                     </div>
+                    
+                    {/* First horizontal divider */}
+                    <div className="horizontal-divider"></div>
                     
                     {/* Product/Service Row */}
                     <div className="grid-row product-row">
@@ -258,6 +263,9 @@ const Home: React.FC = () => {
                       ))}
                     </div>
                     
+                    {/* Second horizontal divider */}
+                    <div className="horizontal-divider"></div>
+                    
                     {/* Technology Row */}
                     <div className="grid-row tech-row">
                       {roadmapContent.tech.map((item, index) => (
@@ -271,18 +279,21 @@ const Home: React.FC = () => {
                       ))}
                     </div>
                     
-                    {/* Horizontal arrows for Business row */}
-                    {roadmapContent.business.map((_, index) => {
-                      if (index < roadmapContent.business.length - 1) {
+                    {/* Horizontal arrows for Market row */}
+                    {roadmapContent.market.map((_, index) => {
+                      if (index < roadmapContent.market.length - 1) {
                         return (
                           <Xarrow 
-                            key={`b-arrow-${index}`}
-                            start={`b${index}`}
-                            end={`b${index + 1}`} 
+                            key={`m-arrow-${index}`}
+                            start={`m${index}`}
+                            end={`m${index + 1}`} 
                             color="#94a3b8" 
                             strokeWidth={2} 
                             dashness={{stroke: 5}} 
                             headSize={5} 
+                            path="straight"
+                            startAnchor="right"
+                            endAnchor="left"
                           />
                         );
                       }
@@ -300,7 +311,10 @@ const Home: React.FC = () => {
                             color="#94a3b8" 
                             strokeWidth={2} 
                             dashness={{stroke: 5}} 
-                            headSize={5} 
+                            headSize={5}
+                            path="straight" 
+                            startAnchor="right"
+                            endAnchor="left"
                           />
                         );
                       }
@@ -318,42 +332,52 @@ const Home: React.FC = () => {
                             color="#94a3b8" 
                             strokeWidth={2} 
                             dashness={{stroke: 5}} 
-                            headSize={5} 
+                            headSize={5}
+                            path="straight"
+                            startAnchor="right"
+                            endAnchor="left" 
                           />
                         );
                       }
                       return null;
                     })}
                     
-                    {/* Vertical arrows between rows */}
-                    {roadmapContent.business.map((_, index) => {
-                      if (index < Math.min(roadmapContent.business.length, roadmapContent.product.length)) {
+                    {/* Vertical arrows from product to market */}
+                    {roadmapContent.market.map((_, index) => {
+                      if (index < Math.min(roadmapContent.market.length, roadmapContent.product.length)) {
                         return (
                           <Xarrow 
-                            key={`bp-arrow-${index}`}
-                            start={`b${index}`}
-                            end={`p${index}`} 
+                            key={`mp-arrow-${index}`}
+                            start={`p${index}`}
+                            end={`m${index}`} 
                             color="#94a3b8" 
                             strokeWidth={2} 
                             dashness={{stroke: 5}} 
                             headSize={5} 
+                            path="straight"
+                            startAnchor="top"
+                            endAnchor="bottom"
                           />
                         );
                       }
                       return null;
                     })}
                     
+                    {/* Vertical arrows from tech to product */}
                     {roadmapContent.product.map((_, index) => {
                       if (index < Math.min(roadmapContent.product.length, roadmapContent.tech.length)) {
                         return (
                           <Xarrow 
                             key={`pt-arrow-${index}`}
-                            start={`p${index}`}
-                            end={`t${index}`} 
+                            start={`t${index}`}
+                            end={`p${index}`} 
                             color="#94a3b8" 
                             strokeWidth={2} 
                             dashness={{stroke: 5}} 
                             headSize={5} 
+                            path="straight"
+                            startAnchor="top"
+                            endAnchor="bottom"
                           />
                         );
                       }
@@ -456,7 +480,7 @@ const Home: React.FC = () => {
           height: 100%;
           display: flex;
           flex-direction: column;
-          gap: 1.5rem;
+          gap: 0.5rem;
           overflow: hidden;
         }
 
@@ -468,124 +492,157 @@ const Home: React.FC = () => {
           overflow: hidden;
           box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
           background-color: #ffffff;
-          padding: 1rem;
-          margin-bottom: 1rem;
+          padding: 2.5rem 1rem 0.5rem;
+          margin-bottom: 0.5rem;
           border: 1px solid #f1f5f9;
           flex: 0 0 auto;
-          max-height: 50%;
+          min-height: 450px;
+          max-height: 60%;
           overflow-x: auto; /* Enable horizontal scrolling */
+          position: relative;
         }
         
-        .business-roadmap {
+        .market-roadmap {
           width: 100%;
           min-width: min-content; /* Prevent squeezing */
           padding: 1.5rem;
-          border: 1px solid #e2e8f0;
-          border-radius: 0.75rem;
           background-color: white;
+          position: relative;
         }
         
         .roadmap-header {
           display: flex;
           justify-content: center;
-          margin-bottom: 1.5rem;
+          margin-bottom: 1rem;
+          position: absolute;
+          top: -30px;
+          right: 20px;
+          z-index: 3;
         }
         
         .time-arrow {
           display: flex;
           align-items: center;
           justify-content: center;
-          margin-top: 0.5rem;
-          width: 100%;
+          border: 2px solid #111827;
+          padding: 0.25rem 0.75rem;
+          border-radius: 0.5rem;
+          background-color: white;
         }
         
         .time-label {
           font-weight: 600;
-          margin-right: 0.5rem;
-          font-size: 0.9rem;
+          margin-right: 0.25rem;
+          font-size: 0.8rem;
           letter-spacing: 1px;
         }
         
         .arrow {
-          font-size: 1.5rem;
+          font-size: 1.25rem;
           font-weight: bold;
         }
         
         .roadmap-content {
           display: flex;
           width: 100%;
+          border: 2px solid #111827;
+          border-radius: 0.75rem;
+          overflow: hidden;
+          position: relative;
+        }
+        
+        .category-divider {
+          position: absolute;
+          left: 100px;
+          top: 0;
+          bottom: 0;
+          width: 1px;
+          background-color: #94a3b8;
+          border-right: 1px dashed #94a3b8;
+          z-index: 1;
         }
         
         .categories {
           display: flex;
           flex-direction: column;
-          margin-right: 0.5rem;
           width: 100px;
+          flex-shrink: 0;
+          z-index: 2;
         }
         
         .category {
-          height: 90px;
+          height: 110px;
           display: flex;
           align-items: center;
-          font-weight: 600;
-          font-size: 0.7rem;
-          color: #475569;
-          writing-mode: vertical-lr;
-          transform: rotate(180deg);
-          padding: 0.5rem;
+          justify-content: center;
+          font-weight: 700;
+          font-size: 0.9rem;
+          color: #111827;
+          text-transform: uppercase;
           letter-spacing: 0.5px;
         }
         
         .roadmap-grid {
           flex: 1;
           position: relative;
-          padding: 0 20px;
+          padding: 10px;
           overflow-x: auto;
           min-width: 0;
+          display: flex;
+          flex-direction: column;
+        }
+        
+        .horizontal-divider {
+          width: 100%;
+          height: 1px;
+          background-color: #94a3b8;
+          border-top: 1px dashed #94a3b8;
+          margin: 10px 0;
         }
         
         .grid-row {
           display: flex;
           justify-content: flex-start;
-          margin-bottom: 1rem;
           height: 90px;
           gap: 20px; /* Space between nodes */
           min-width: max-content; /* Ensure content doesn't wrap */
+          padding-left: 20px;
         }
         
         .node {
-          min-width: 110px;
-          width: 110px;
+          min-width: 120px;
+          width: 120px;
           height: 70px;
           display: flex;
           align-items: center;
           justify-content: center;
           border-radius: 0.5rem;
-          padding: 0.75rem;
-          font-size: 0.75rem;
+          padding: 0.5rem;
+          font-size: 0.7rem;
           font-weight: 500;
           text-align: center;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
           z-index: 2;
           position: relative;
           flex-shrink: 0; /* Prevent nodes from shrinking */
+          border: 1px solid #111827;
+          border-radius: 8px;
         }
         
         .tech-node {
           background-color: #e0f2fe;
-          border: 1px solid #7dd3fc;
+          border: 1px solid #111827;
           color: #0369a1;
         }
         
         .product-node {
           background-color: #dcfce7;
-          border: 1px solid #86efac;
+          border: 1px solid #111827;
           color: #16a34a;
         }
         
-        .business-node {
+        .market-node {
           background-color: #fef9c3;
-          border: 1px solid #fde047;
+          border: 1px solid #111827;
           color: #ca8a04;
         }
         
@@ -595,9 +652,10 @@ const Home: React.FC = () => {
           width: 100%;
           display: flex;
           flex-direction: column;
-          gap: 1rem;
+          gap: 0.5rem;
           flex: 1;
-          min-height: 0;
+          min-height: 100px;
+          max-height: 35%;
           overflow: hidden;
         }
 
@@ -605,10 +663,10 @@ const Home: React.FC = () => {
           width: 100%;
           display: flex;
           flex-direction: column;
-          gap: 1rem;
+          gap: 0.5rem;
           flex: 1;
           overflow-y: auto;
-          padding: 0.5rem;
+          padding: 0.25rem;
           scrollbar-width: none; /* Firefox */
           -ms-overflow-style: none; /* IE and Edge */
           min-height: 0;
@@ -620,11 +678,11 @@ const Home: React.FC = () => {
 
         .message {
           width: 100%;
-          padding: 1.25rem;
+          padding: 0.75rem 1rem;
           border-radius: 0.75rem;
           display: flex;
           align-items: flex-start;
-          line-height: 1.6;
+          line-height: 1.4;
         }
 
         .message.user {
@@ -682,20 +740,20 @@ const Home: React.FC = () => {
           border-radius: 0.75rem;
           overflow: hidden;
           box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-          margin-top: 1rem;
+          margin-top: 0.5rem;
         }
 
         .text-input {
           width: 100%;
-          padding: 1.25rem;
+          padding: 0.75rem 1rem;
           background-color: transparent;
           border: none;
           color: #111827;
-          font-size: 1rem;
+          font-size: 0.9rem;
           font-family: 'Inter', sans-serif;
           resize: none;
-          min-height: 60px;
-          max-height: 500px;
+          min-height: 40px;
+          max-height: 100px;
           overflow-y: auto;
         }
 
@@ -711,7 +769,7 @@ const Home: React.FC = () => {
           display: flex;
           justify-content: flex-end;
           align-items: center;
-          padding: 0.75rem 1.25rem;
+          padding: 0.5rem 0.75rem;
           border-top: 1px solid #e2e8f0;
         }
 
