@@ -3,10 +3,75 @@ import Head from 'next/head';
 import Image from 'next/image';
 import Xarrow from 'react-xarrows';
 
+// Random strings for each category
+const businessStrings = [
+  "Market Research",
+  "Funding Round",
+  "International Expansion",
+  "Customer Acquisition",
+  "Brand Development",
+  "Strategic Partnership",
+  "Revenue Diversification",
+  "Market Segmentation",
+  "Competitive Analysis",
+  "Franchise Model",
+  "Merger & Acquisition",
+  "B2B Development",
+  "Vertical Integration",
+  "Organizational Restructuring",
+  "Stakeholder Engagement"
+];
+
+const productStrings = [
+  "Platform MVP",
+  "Feature Enhancement",
+  "Global Service",
+  "User Testing",
+  "Product Roadmap",
+  "UX Refinement",
+  "Beta Testing",
+  "Cross-platform Support",
+  "Premium Features",
+  "Mobile Integration",
+  "Subscription Model",
+  "Product Analytics",
+  "Customer Feedback Loop",
+  "Localization Strategy",
+  "Design System"
+];
+
+const techStrings = [
+  "Quantum Computing",
+  "AI Integration",
+  "Blockchain",
+  "Cloud Migration",
+  "Infrastructure Scaling",
+  "Cybersecurity Framework",
+  "Data Architecture",
+  "DevOps Implementation",
+  "Machine Learning Algorithms",
+  "API Ecosystem",
+  "Microservices Architecture",
+  "Edge Computing",
+  "Real-time Analytics",
+  "IoT Integration",
+  "Containerization"
+];
+
 const Home: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [showRoadmap, setShowRoadmap] = useState(false);
   const [messages, setMessages] = useState<{type: 'user' | 'ai', content: string}[]>([]);
+  const [roadmapContent, setRoadmapContent] = useState<{
+    business: string[],
+    product: string[],
+    tech: string[]
+  }>({
+    business: [],
+    product: [],
+    tech: []
+  });
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   
@@ -21,7 +86,32 @@ const Home: React.FC = () => {
   useEffect(() => {
     // Focus input field when component mounts or showRoadmap changes
     inputRef.current?.focus();
-  }, [showRoadmap]);
+    
+    // Initialize roadmap content with random data if none exists
+    if (showRoadmap && 
+        roadmapContent.business.length === 0 && 
+        roadmapContent.product.length === 0 && 
+        roadmapContent.tech.length === 0) {
+      
+      // Generate random number of items (between 3-6) for each category
+      const businessCount = getRandomNumber(3, 6);
+      const productCount = getRandomNumber(3, 6);
+      const techCount = getRandomNumber(3, 6);
+      
+      // Get random items for each category
+      const business = getRandomItems(businessStrings, businessCount);
+      const product = getRandomItems(productStrings, productCount);
+      const tech = getRandomItems(techStrings, techCount);
+      
+      // Update roadmap content
+      setRoadmapContent({
+        business,
+        product,
+        tech
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showRoadmap, roadmapContent.business.length, roadmapContent.product.length, roadmapContent.tech.length]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(e.target.value);
@@ -34,8 +124,36 @@ const Home: React.FC = () => {
     }
   };
 
+  // Function to get random number between min and max (inclusive)
+  const getRandomNumber = (min: number, max: number): number => {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  };
+  
+  // Function to get random items from an array
+  const getRandomItems = (arr: string[], count: number): string[] => {
+    const shuffled = [...arr].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  };
+
   const handleSubmit = () => {
     if (!inputText.trim()) return;
+    
+    // Generate random number of items (between 3-6) for each category
+    const businessCount = getRandomNumber(3, 6);
+    const productCount = getRandomNumber(3, 6);
+    const techCount = getRandomNumber(3, 6);
+    
+    // Get random items for each category
+    const business = getRandomItems(businessStrings, businessCount);
+    const product = getRandomItems(productStrings, productCount);
+    const tech = getRandomItems(techStrings, techCount);
+    
+    // Update roadmap content
+    setRoadmapContent({
+      business,
+      product,
+      tech
+    });
     
     const updatedMessages = [
       ...messages, 
@@ -115,42 +233,132 @@ const Home: React.FC = () => {
                   
                   <div className="roadmap-grid">
                     {/* Business/Market Row */}
-                    <div className="grid-row">
-                      <div className="node business-node" id="b1">Market Research</div>
-                      <div className="node business-node" id="b2">Funding Round</div>
-                      <div className="node business-node" id="b3">International Expansion</div>
+                    <div className="grid-row business-row">
+                      {roadmapContent.business.map((item, index) => (
+                        <div 
+                          key={`b${index}`} 
+                          className="node business-node" 
+                          id={`b${index}`}
+                        >
+                          {item}
+                        </div>
+                      ))}
                     </div>
                     
                     {/* Product/Service Row */}
-                    <div className="grid-row">
-                      <div className="node product-node" id="p1">Platform MVP</div>
-                      <div className="node product-node" id="p2">Feature Enhancement</div>
-                      <div className="node product-node" id="p3">Global Service</div>
+                    <div className="grid-row product-row">
+                      {roadmapContent.product.map((item, index) => (
+                        <div 
+                          key={`p${index}`} 
+                          className="node product-node" 
+                          id={`p${index}`}
+                        >
+                          {item}
+                        </div>
+                      ))}
                     </div>
                     
                     {/* Technology Row */}
-                    <div className="grid-row">
-                      <div className="node tech-node" id="t1">Quantum Computing</div>
-                      <div className="node tech-node" id="t2">AI Integration</div>
-                      <div className="node tech-node" id="t3">Blockchain</div>
+                    <div className="grid-row tech-row">
+                      {roadmapContent.tech.map((item, index) => (
+                        <div 
+                          key={`t${index}`} 
+                          className="node tech-node" 
+                          id={`t${index}`}
+                        >
+                          {item}
+                        </div>
+                      ))}
                     </div>
                     
-                    {/* Arrows using react-xarrows */}
-                    {/* Horizontal arrows */}
-                    <Xarrow start="b1" end="b2" color="#94a3b8" strokeWidth={2} dashness={{stroke: 5}} headSize={5} />
-                    <Xarrow start="b2" end="b3" color="#94a3b8" strokeWidth={2} dashness={{stroke: 5}} headSize={5} />
-                    <Xarrow start="p1" end="p2" color="#94a3b8" strokeWidth={2} dashness={{stroke: 5}} headSize={5} />
-                    <Xarrow start="p2" end="p3" color="#94a3b8" strokeWidth={2} dashness={{stroke: 5}} headSize={5} />
-                    <Xarrow start="t1" end="t2" color="#94a3b8" strokeWidth={2} dashness={{stroke: 5}} headSize={5} />
-                    <Xarrow start="t2" end="t3" color="#94a3b8" strokeWidth={2} dashness={{stroke: 5}} headSize={5} />
+                    {/* Horizontal arrows for Business row */}
+                    {roadmapContent.business.map((_, index) => {
+                      if (index < roadmapContent.business.length - 1) {
+                        return (
+                          <Xarrow 
+                            key={`b-arrow-${index}`}
+                            start={`b${index}`}
+                            end={`b${index + 1}`} 
+                            color="#94a3b8" 
+                            strokeWidth={2} 
+                            dashness={{stroke: 5}} 
+                            headSize={5} 
+                          />
+                        );
+                      }
+                      return null;
+                    })}
                     
-                    {/* Vertical arrows */}
-                    <Xarrow start="b1" end="p1" color="#94a3b8" strokeWidth={2} dashness={{stroke: 5}} headSize={5} />
-                    <Xarrow start="b2" end="p2" color="#94a3b8" strokeWidth={2} dashness={{stroke: 5}} headSize={5} />
-                    <Xarrow start="b3" end="p3" color="#94a3b8" strokeWidth={2} dashness={{stroke: 5}} headSize={5} />
-                    <Xarrow start="p1" end="t1" color="#94a3b8" strokeWidth={2} dashness={{stroke: 5}} headSize={5} />
-                    <Xarrow start="p2" end="t2" color="#94a3b8" strokeWidth={2} dashness={{stroke: 5}} headSize={5} />
-                    <Xarrow start="p3" end="t3" color="#94a3b8" strokeWidth={2} dashness={{stroke: 5}} headSize={5} />
+                    {/* Horizontal arrows for Product row */}
+                    {roadmapContent.product.map((_, index) => {
+                      if (index < roadmapContent.product.length - 1) {
+                        return (
+                          <Xarrow 
+                            key={`p-arrow-${index}`}
+                            start={`p${index}`}
+                            end={`p${index + 1}`} 
+                            color="#94a3b8" 
+                            strokeWidth={2} 
+                            dashness={{stroke: 5}} 
+                            headSize={5} 
+                          />
+                        );
+                      }
+                      return null;
+                    })}
+                    
+                    {/* Horizontal arrows for Tech row */}
+                    {roadmapContent.tech.map((_, index) => {
+                      if (index < roadmapContent.tech.length - 1) {
+                        return (
+                          <Xarrow 
+                            key={`t-arrow-${index}`}
+                            start={`t${index}`}
+                            end={`t${index + 1}`} 
+                            color="#94a3b8" 
+                            strokeWidth={2} 
+                            dashness={{stroke: 5}} 
+                            headSize={5} 
+                          />
+                        );
+                      }
+                      return null;
+                    })}
+                    
+                    {/* Vertical arrows between rows */}
+                    {roadmapContent.business.map((_, index) => {
+                      if (index < Math.min(roadmapContent.business.length, roadmapContent.product.length)) {
+                        return (
+                          <Xarrow 
+                            key={`bp-arrow-${index}`}
+                            start={`b${index}`}
+                            end={`p${index}`} 
+                            color="#94a3b8" 
+                            strokeWidth={2} 
+                            dashness={{stroke: 5}} 
+                            headSize={5} 
+                          />
+                        );
+                      }
+                      return null;
+                    })}
+                    
+                    {roadmapContent.product.map((_, index) => {
+                      if (index < Math.min(roadmapContent.product.length, roadmapContent.tech.length)) {
+                        return (
+                          <Xarrow 
+                            key={`pt-arrow-${index}`}
+                            start={`p${index}`}
+                            end={`t${index}`} 
+                            color="#94a3b8" 
+                            strokeWidth={2} 
+                            dashness={{stroke: 5}} 
+                            headSize={5} 
+                          />
+                        );
+                      }
+                      return null;
+                    })}
                   </div>
                 </div>
               </div>
@@ -265,16 +473,16 @@ const Home: React.FC = () => {
           border: 1px solid #f1f5f9;
           flex: 0 0 auto;
           max-height: 50%;
+          overflow-x: auto; /* Enable horizontal scrolling */
         }
         
         .business-roadmap {
           width: 100%;
+          min-width: min-content; /* Prevent squeezing */
           padding: 1.5rem;
           border: 1px solid #e2e8f0;
           border-radius: 0.75rem;
           background-color: white;
-          transform: scale(0.95);
-          transform-origin: center;
         }
         
         .roadmap-header {
@@ -332,16 +540,21 @@ const Home: React.FC = () => {
           flex: 1;
           position: relative;
           padding: 0 20px;
+          overflow-x: auto;
+          min-width: 0;
         }
         
         .grid-row {
           display: flex;
-          justify-content: space-around;
+          justify-content: flex-start;
           margin-bottom: 1rem;
           height: 90px;
+          gap: 20px; /* Space between nodes */
+          min-width: max-content; /* Ensure content doesn't wrap */
         }
         
         .node {
+          min-width: 110px;
           width: 110px;
           height: 70px;
           display: flex;
@@ -355,7 +568,7 @@ const Home: React.FC = () => {
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
           z-index: 2;
           position: relative;
-          margin: 0 10px;
+          flex-shrink: 0; /* Prevent nodes from shrinking */
         }
         
         .tech-node {
