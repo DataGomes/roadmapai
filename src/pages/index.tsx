@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
-import Xarrow from 'react-xarrows';
 import { generateRoadmapTopics, chatWithRoadmap } from '../services/api';
 
 const Home: React.FC = () => {
@@ -184,6 +183,11 @@ const Home: React.FC = () => {
       } finally {
         // Clear generating state
         setIsGenerating(false);
+        
+        // Focus the input field after roadmap generation
+        setTimeout(() => {
+          inputRef.current?.focus();
+        }, 100);
       }
     } 
     // If roadmap is already shown, use chat API
@@ -212,6 +216,11 @@ const Home: React.FC = () => {
           ...newMessages,
           {type: 'ai' as const, content: chatResponse.response}
         ]);
+        
+        // Focus the input field after receiving the chat response
+        setTimeout(() => {
+          inputRef.current?.focus();
+        }, 100);
       } catch (error) {
         console.error('Error chatting with roadmap:', error);
         
@@ -220,6 +229,11 @@ const Home: React.FC = () => {
           ...newMessages,
           {type: 'ai' as const, content: 'Sorry, there was an error processing your message. Please try again.'}
         ]);
+        
+        // Focus the input field even after an error
+        setTimeout(() => {
+          inputRef.current?.focus();
+        }, 100);
       }
     }
   };
@@ -346,110 +360,7 @@ const Home: React.FC = () => {
                         ))}
                       </div>
                       
-                      {/* Horizontal arrows for Market row */}
-                      {roadmapContent.market.map((_, index) => {
-                        if (index < roadmapContent.market.length - 1) {
-                          return (
-                            <Xarrow 
-                              key={`m-arrow-${index}`}
-                              start={`m${index}`}
-                              end={`m${index + 1}`} 
-                              color="#94a3b8" 
-                              strokeWidth={2} 
-                              dashness={{strokeLen: 5}} 
-                              headSize={5} 
-                              path="straight"
-                              startAnchor="right"
-                              endAnchor="left"
-                            />
-                          );
-                        }
-                        return null;
-                      })}
-                      
-                      {/* Horizontal arrows for Product row */}
-                      {roadmapContent.product.map((_, index) => {
-                        if (index < roadmapContent.product.length - 1) {
-                          return (
-                            <Xarrow 
-                              key={`p-arrow-${index}`}
-                              start={`p${index}`}
-                              end={`p${index + 1}`} 
-                              color="#94a3b8" 
-                              strokeWidth={2} 
-                              dashness={{strokeLen: 5}} 
-                              headSize={5}
-                              path="straight" 
-                              startAnchor="right"
-                              endAnchor="left"
-                            />
-                          );
-                        }
-                        return null;
-                      })}
-                      
-                      {/* Horizontal arrows for Tech row */}
-                      {roadmapContent.tech.map((_, index) => {
-                        if (index < roadmapContent.tech.length - 1) {
-                          return (
-                            <Xarrow 
-                              key={`t-arrow-${index}`}
-                              start={`t${index}`}
-                              end={`t${index + 1}`} 
-                              color="#94a3b8" 
-                              strokeWidth={2} 
-                              dashness={{strokeLen: 5}} 
-                              headSize={5}
-                              path="straight"
-                              startAnchor="right"
-                              endAnchor="left" 
-                            />
-                          );
-                        }
-                        return null;
-                      })}
-                      
-                      {/* Vertical arrows from product to market */}
-                      {roadmapContent.market.map((_, index) => {
-                        if (index < Math.min(roadmapContent.market.length, roadmapContent.product.length)) {
-                          return (
-                            <Xarrow 
-                              key={`mp-arrow-${index}`}
-                              start={`p${index}`}
-                              end={`m${index}`} 
-                              color="#94a3b8" 
-                              strokeWidth={2} 
-                              dashness={{strokeLen: 5}} 
-                              headSize={5} 
-                              path="straight"
-                              startAnchor="top"
-                              endAnchor="bottom"
-                            />
-                          );
-                        }
-                        return null;
-                      })}
-                      
-                      {/* Vertical arrows from tech to product */}
-                      {roadmapContent.product.map((_, index) => {
-                        if (index < Math.min(roadmapContent.product.length, roadmapContent.tech.length)) {
-                          return (
-                            <Xarrow 
-                              key={`pt-arrow-${index}`}
-                              start={`t${index}`}
-                              end={`p${index}`} 
-                              color="#94a3b8" 
-                              strokeWidth={2} 
-                              dashness={{strokeLen: 5}} 
-                              headSize={5} 
-                              path="straight"
-                              startAnchor="top"
-                              endAnchor="bottom"
-                            />
-                          );
-                        }
-                        return null;
-                      })}
+                      {/* All arrows have been removed */}
                     </div>
                   </div>
                 </div>
