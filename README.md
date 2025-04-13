@@ -44,7 +44,3 @@ A web application that generates personalized roadmaps based on user input.
 ## Deployment
 
 This project can be deployed to AWS.
-
-## License
-
-ISC
