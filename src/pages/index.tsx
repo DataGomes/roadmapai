@@ -7,6 +7,7 @@ import { generateRoadmapTopics, chatWithRoadmap } from '../services/api';
 const Home: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [showRoadmap, setShowRoadmap] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [messages, setMessages] = useState<{type: 'user' | 'ai', content: string}[]>([]);
   const [sessionId, setSessionId] = useState<string | undefined>(undefined);
   const [roadmapContent, setRoadmapContent] = useState<{
@@ -121,24 +122,36 @@ const Home: React.FC = () => {
   const handleSubmit = async () => {
     if (!inputText.trim()) return;
     
+    // Store the message content before clearing
+    const messageContent = inputText;
+    
+    // Clear input immediately
+    setInputText('');
+    
     // Add user message immediately
     const newMessages = [
       ...messages,
-      {type: 'user' as const, content: inputText}
+      {type: 'user' as const, content: messageContent}
     ];
     setMessages(newMessages);
     
     // If roadmap is not shown yet, generate it
     if (!showRoadmap) {
       try {
-        // Add loading message
+        // Set generating state to show loading UI
+        setIsGenerating(true);
+        
+        // Add loading message and immediately show roadmap container
         setMessages([
           ...newMessages,
           {type: 'ai' as const, content: 'Generating your roadmap...'}
         ]);
         
+        // Show roadmap container first
+        setShowRoadmap(true);
+        
         // Call the API to generate roadmap topics
-        const roadmapData = await generateRoadmapTopics(inputText);
+        const roadmapData = await generateRoadmapTopics(messageContent);
         
         // Update roadmap content with API response
         setRoadmapContent(roadmapData);
@@ -160,9 +173,6 @@ const Home: React.FC = () => {
             {type: 'ai' as const, content: 'Here is your roadmap based on your business description.'}
           ]);
         }
-        
-        // Show roadmap
-        setShowRoadmap(true);
       } catch (error) {
         console.error('Error generating roadmap:', error);
         
@@ -171,6 +181,9 @@ const Home: React.FC = () => {
           ...newMessages,
           {type: 'ai' as const, content: 'Sorry, there was an error generating your roadmap. Please try again.'}
         ]);
+      } finally {
+        // Clear generating state
+        setIsGenerating(false);
       }
     } 
     // If roadmap is already shown, use chat API
@@ -184,7 +197,7 @@ const Home: React.FC = () => {
         
         // Call the chat API
         const chatResponse = await chatWithRoadmap(
-          inputText, 
+          messageContent, 
           sessionId, 
           !sessionId ? roadmapContent : undefined
         );
@@ -209,9 +222,6 @@ const Home: React.FC = () => {
         ]);
       }
     }
-    
-    // Clear input
-    setInputText('');
   };
 
   return (
@@ -267,176 +277,183 @@ const Home: React.FC = () => {
               </button>
             </div>
             <div className="roadmap-image">
-              <div className="market-roadmap">
-                <div className="roadmap-header">
-                  <div className="time-arrow">
-                    <div className="time-label">TIME</div>
-                    <div className="arrow">→</div>
-                  </div>
+              {isGenerating ? (
+                <div className="roadmap-loading">
+                  <div className="loading-spinner"></div>
+                  <div className="loading-text">Building your business roadmap...</div>
                 </div>
-                
-                <div className="roadmap-content">
-                  <div className="categories">
-                    <div className="category">MARKET</div>
-                    <div className="category">PRODUCT</div>
-                    <div className="category">TECH</div>
+              ) : (
+                <div className="market-roadmap">
+                  <div className="roadmap-header">
+                    <div className="time-arrow">
+                      <div className="time-label">TIME</div>
+                      <div className="arrow">→</div>
+                    </div>
                   </div>
                   
-                  <div className="category-divider"></div>
-                  
-                  <div className="roadmap-grid">
-                    {/* Market Row */}
-                    <div className="grid-row market-row">
-                      {roadmapContent.market.map((item, index) => (
-                        <div 
-                          key={`m${index}`} 
-                          className="node market-node" 
-                          id={`m${index}`}
-                        >
-                          {item}
-                        </div>
-                      ))}
+                  <div className="roadmap-content">
+                    <div className="categories">
+                      <div className="category">MARKET</div>
+                      <div className="category">PRODUCT</div>
+                      <div className="category">TECH</div>
                     </div>
                     
-                    {/* First horizontal divider */}
-                    <div className="horizontal-divider"></div>
+                    <div className="category-divider"></div>
                     
-                    {/* Product/Service Row */}
-                    <div className="grid-row product-row">
-                      {roadmapContent.product.map((item, index) => (
-                        <div 
-                          key={`p${index}`} 
-                          className="node product-node" 
-                          id={`p${index}`}
-                        >
-                          {item}
-                        </div>
-                      ))}
+                    <div className="roadmap-grid">
+                      {/* Market Row */}
+                      <div className="grid-row market-row">
+                        {roadmapContent.market.map((item, index) => (
+                          <div 
+                            key={`m${index}`} 
+                            className="node market-node" 
+                            id={`m${index}`}
+                          >
+                            {item}
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {/* First horizontal divider */}
+                      <div className="horizontal-divider"></div>
+                      
+                      {/* Product/Service Row */}
+                      <div className="grid-row product-row">
+                        {roadmapContent.product.map((item, index) => (
+                          <div 
+                            key={`p${index}`} 
+                            className="node product-node" 
+                            id={`p${index}`}
+                          >
+                            {item}
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {/* Second horizontal divider */}
+                      <div className="horizontal-divider"></div>
+                      
+                      {/* Technology Row */}
+                      <div className="grid-row tech-row">
+                        {roadmapContent.tech.map((item, index) => (
+                          <div 
+                            key={`t${index}`} 
+                            className="node tech-node" 
+                            id={`t${index}`}
+                          >
+                            {item}
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {/* Horizontal arrows for Market row */}
+                      {roadmapContent.market.map((_, index) => {
+                        if (index < roadmapContent.market.length - 1) {
+                          return (
+                            <Xarrow 
+                              key={`m-arrow-${index}`}
+                              start={`m${index}`}
+                              end={`m${index + 1}`} 
+                              color="#94a3b8" 
+                              strokeWidth={2} 
+                              dashness={{strokeLen: 5}} 
+                              headSize={5} 
+                              path="straight"
+                              startAnchor="right"
+                              endAnchor="left"
+                            />
+                          );
+                        }
+                        return null;
+                      })}
+                      
+                      {/* Horizontal arrows for Product row */}
+                      {roadmapContent.product.map((_, index) => {
+                        if (index < roadmapContent.product.length - 1) {
+                          return (
+                            <Xarrow 
+                              key={`p-arrow-${index}`}
+                              start={`p${index}`}
+                              end={`p${index + 1}`} 
+                              color="#94a3b8" 
+                              strokeWidth={2} 
+                              dashness={{strokeLen: 5}} 
+                              headSize={5}
+                              path="straight" 
+                              startAnchor="right"
+                              endAnchor="left"
+                            />
+                          );
+                        }
+                        return null;
+                      })}
+                      
+                      {/* Horizontal arrows for Tech row */}
+                      {roadmapContent.tech.map((_, index) => {
+                        if (index < roadmapContent.tech.length - 1) {
+                          return (
+                            <Xarrow 
+                              key={`t-arrow-${index}`}
+                              start={`t${index}`}
+                              end={`t${index + 1}`} 
+                              color="#94a3b8" 
+                              strokeWidth={2} 
+                              dashness={{strokeLen: 5}} 
+                              headSize={5}
+                              path="straight"
+                              startAnchor="right"
+                              endAnchor="left" 
+                            />
+                          );
+                        }
+                        return null;
+                      })}
+                      
+                      {/* Vertical arrows from product to market */}
+                      {roadmapContent.market.map((_, index) => {
+                        if (index < Math.min(roadmapContent.market.length, roadmapContent.product.length)) {
+                          return (
+                            <Xarrow 
+                              key={`mp-arrow-${index}`}
+                              start={`p${index}`}
+                              end={`m${index}`} 
+                              color="#94a3b8" 
+                              strokeWidth={2} 
+                              dashness={{strokeLen: 5}} 
+                              headSize={5} 
+                              path="straight"
+                              startAnchor="top"
+                              endAnchor="bottom"
+                            />
+                          );
+                        }
+                        return null;
+                      })}
+                      
+                      {/* Vertical arrows from tech to product */}
+                      {roadmapContent.product.map((_, index) => {
+                        if (index < Math.min(roadmapContent.product.length, roadmapContent.tech.length)) {
+                          return (
+                            <Xarrow 
+                              key={`pt-arrow-${index}`}
+                              start={`t${index}`}
+                              end={`p${index}`} 
+                              color="#94a3b8" 
+                              strokeWidth={2} 
+                              dashness={{strokeLen: 5}} 
+                              headSize={5} 
+                              path="straight"
+                              startAnchor="top"
+                              endAnchor="bottom"
+                            />
+                          );
+                        }
+                        return null;
+                      })}
                     </div>
-                    
-                    {/* Second horizontal divider */}
-                    <div className="horizontal-divider"></div>
-                    
-                    {/* Technology Row */}
-                    <div className="grid-row tech-row">
-                      {roadmapContent.tech.map((item, index) => (
-                        <div 
-                          key={`t${index}`} 
-                          className="node tech-node" 
-                          id={`t${index}`}
-                        >
-                          {item}
-                        </div>
-                      ))}
-                    </div>
-                    
-                    {/* Horizontal arrows for Market row */}
-                    {roadmapContent.market.map((_, index) => {
-                      if (index < roadmapContent.market.length - 1) {
-                        return (
-                          <Xarrow 
-                            key={`m-arrow-${index}`}
-                            start={`m${index}`}
-                            end={`m${index + 1}`} 
-                            color="#94a3b8" 
-                            strokeWidth={2} 
-                            dashness={{strokeLen: 5}} 
-                            headSize={5} 
-                            path="straight"
-                            startAnchor="right"
-                            endAnchor="left"
-                          />
-                        );
-                      }
-                      return null;
-                    })}
-                    
-                    {/* Horizontal arrows for Product row */}
-                    {roadmapContent.product.map((_, index) => {
-                      if (index < roadmapContent.product.length - 1) {
-                        return (
-                          <Xarrow 
-                            key={`p-arrow-${index}`}
-                            start={`p${index}`}
-                            end={`p${index + 1}`} 
-                            color="#94a3b8" 
-                            strokeWidth={2} 
-                            dashness={{strokeLen: 5}} 
-                            headSize={5}
-                            path="straight" 
-                            startAnchor="right"
-                            endAnchor="left"
-                          />
-                        );
-                      }
-                      return null;
-                    })}
-                    
-                    {/* Horizontal arrows for Tech row */}
-                    {roadmapContent.tech.map((_, index) => {
-                      if (index < roadmapContent.tech.length - 1) {
-                        return (
-                          <Xarrow 
-                            key={`t-arrow-${index}`}
-                            start={`t${index}`}
-                            end={`t${index + 1}`} 
-                            color="#94a3b8" 
-                            strokeWidth={2} 
-                            dashness={{strokeLen: 5}} 
-                            headSize={5}
-                            path="straight"
-                            startAnchor="right"
-                            endAnchor="left" 
-                          />
-                        );
-                      }
-                      return null;
-                    })}
-                    
-                    {/* Vertical arrows from product to market */}
-                    {roadmapContent.market.map((_, index) => {
-                      if (index < Math.min(roadmapContent.market.length, roadmapContent.product.length)) {
-                        return (
-                          <Xarrow 
-                            key={`mp-arrow-${index}`}
-                            start={`p${index}`}
-                            end={`m${index}`} 
-                            color="#94a3b8" 
-                            strokeWidth={2} 
-                            dashness={{strokeLen: 5}} 
-                            headSize={5} 
-                            path="straight"
-                            startAnchor="top"
-                            endAnchor="bottom"
-                          />
-                        );
-                      }
-                      return null;
-                    })}
-                    
-                    {/* Vertical arrows from tech to product */}
-                    {roadmapContent.product.map((_, index) => {
-                      if (index < Math.min(roadmapContent.product.length, roadmapContent.tech.length)) {
-                        return (
-                          <Xarrow 
-                            key={`pt-arrow-${index}`}
-                            start={`t${index}`}
-                            end={`p${index}`} 
-                            color="#94a3b8" 
-                            strokeWidth={2} 
-                            dashness={{strokeLen: 5}} 
-                            headSize={5} 
-                            path="straight"
-                            startAnchor="top"
-                            endAnchor="bottom"
-                          />
-                        );
-                      }
-                      return null;
-                    })}
                   </div>
                 </div>
-              </div>
+              )}
             </div>
             
             <div className="chat-container">
@@ -460,12 +477,13 @@ const Home: React.FC = () => {
                   onKeyDown={handleKeyDown}
                   rows={1}
                   ref={inputRef}
+                  disabled={isGenerating}
                 />
                 <div className="input-controls">
                   <div className="submit">
                     <button 
                       className="generate-button"
-                      disabled={!inputText.trim()}
+                      disabled={!inputText.trim() || isGenerating}
                       onClick={handleSubmit}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -716,6 +734,36 @@ const Home: React.FC = () => {
           background-color: #fef9c3;
           border: 1px solid #111827;
           color: #ca8a04;
+        }
+        
+        .roadmap-loading {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 1rem;
+        }
+        
+        .loading-spinner {
+          width: 48px;
+          height: 48px;
+          border: 3px solid #e2e8f0;
+          border-radius: 50%;
+          border-top-color: #6366f1;
+          animation: spin 1s ease-in-out infinite;
+        }
+        
+        .loading-text {
+          font-size: 1rem;
+          color: #475569;
+        }
+        
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
         }
         
         /* Remove old arrow styles as we're using react-xarrows now */
