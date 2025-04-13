@@ -2,70 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import Xarrow from 'react-xarrows';
-
-// Random strings for each category
-const marketStrings = [
-  "Market Research",
-  "Funding Round",
-  "International Expansion",
-  "Customer Acquisition",
-  "Brand Development",
-  "Strategic Partnership",
-  "Revenue Diversification",
-  "Market Segmentation",
-  "Competitive Analysis",
-  "Franchise Model",
-  "Merger & Acquisition",
-  "B2B Development",
-  "Vertical Integration",
-  "Organizational Restructuring",
-  "Stakeholder Engagement"
-];
-
-const productStrings = [
-  "Platform MVP",
-  "Feature Enhancement",
-  "Global Service",
-  "User Testing",
-  "Product Roadmap",
-  "UX Refinement",
-  "Beta Testing",
-  "Cross-platform Support",
-  "Premium Features",
-  "Mobile Integration",
-  "Subscription Model",
-  "Product Analytics",
-  "Customer Feedback Loop",
-  "Localization Strategy",
-  "Design System"
-];
-
-const techStrings = [
-  "Quantum Computing",
-  "AI Integration",
-  "Blockchain",
-  "Cloud Migration",
-  "Infrastructure Scaling",
-  "Cybersecurity Framework",
-  "Data Architecture",
-  "DevOps Implementation",
-  "Machine Learning Algorithms",
-  "API Ecosystem",
-  "Microservices Architecture",
-  "Edge Computing",
-  "Real-time Analytics",
-  "IoT Integration",
-  "Containerization"
-];
+import { generateRoadmapTopics, chatWithRoadmap } from '../services/api';
 
 const Home: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [showRoadmap, setShowRoadmap] = useState(false);
   const [messages, setMessages] = useState<{type: 'user' | 'ai', content: string}[]>([]);
+  const [sessionId, setSessionId] = useState<string | undefined>(undefined);
   const [roadmapContent, setRoadmapContent] = useState<{
     market: string[],
     product: string[],
-    tech: string[]
+    tech: string[],
+    vision?: string
   }>({
     market: [],
     product: [],
@@ -86,32 +34,47 @@ const Home: React.FC = () => {
   useEffect(() => {
     // Focus input field when component mounts or showRoadmap changes
     inputRef.current?.focus();
-    
-    // Initialize roadmap content with random data if none exists
-    if (showRoadmap && 
-        roadmapContent.market.length === 0 && 
-        roadmapContent.product.length === 0 && 
-        roadmapContent.tech.length === 0) {
+  }, [showRoadmap]);
+  
+  // Check localStorage for existing session
+  useEffect(() => {
+    // Only run on client side
+    if (typeof window !== 'undefined') {
+      const savedSessionId = localStorage.getItem('roadmapSessionId');
+      const savedRoadmap = localStorage.getItem('roadmapContent');
       
-      // Generate random number of items (between 3-6) for each category
-      const marketCount = getRandomNumber(3, 6);
-      const productCount = getRandomNumber(3, 6);
-      const techCount = getRandomNumber(3, 6);
+      if (savedSessionId) {
+        setSessionId(savedSessionId);
+      }
       
-      // Get random items for each category
-      const market = getRandomItems(marketStrings, marketCount);
-      const product = getRandomItems(productStrings, productCount);
-      const tech = getRandomItems(techStrings, techCount);
-      
-      // Update roadmap content
-      setRoadmapContent({
-        market,
-        product,
-        tech
-      });
+      if (savedRoadmap) {
+        try {
+          const parsedRoadmap = JSON.parse(savedRoadmap);
+          setRoadmapContent(parsedRoadmap);
+          
+          // If we have a saved roadmap, show it
+          if (parsedRoadmap.market?.length > 0) {
+            setShowRoadmap(true);
+          }
+        } catch (error) {
+          console.error('Error parsing saved roadmap:', error);
+        }
+      }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showRoadmap, roadmapContent.market.length, roadmapContent.product.length, roadmapContent.tech.length]);
+  }, []);
+  
+  // Save session ID and roadmap to localStorage when they change
+  useEffect(() => {
+    if (sessionId && typeof window !== 'undefined') {
+      localStorage.setItem('roadmapSessionId', sessionId);
+    }
+  }, [sessionId]);
+  
+  useEffect(() => {
+    if (roadmapContent.market.length > 0 && typeof window !== 'undefined') {
+      localStorage.setItem('roadmapContent', JSON.stringify(roadmapContent));
+    }
+  }, [roadmapContent]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(e.target.value);
@@ -123,49 +86,129 @@ const Home: React.FC = () => {
       handleSubmit();
     }
   };
-
-  // Function to get random number between min and max (inclusive)
-  const getRandomNumber = (min: number, max: number): number => {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  };
   
-  // Function to get random items from an array
-  const getRandomItems = (arr: string[], count: number): string[] => {
-    const shuffled = [...arr].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, count);
+  const clearSession = () => {
+    // Clear localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('roadmapSessionId');
+      localStorage.removeItem('roadmapContent');
+    }
+    
+    // Reset state
+    setSessionId(undefined);
+    setRoadmapContent({
+      market: [],
+      product: [],
+      tech: []
+    });
+    setMessages([]);
+    setShowRoadmap(false);
+    
+    // Clear session on server if we have a session ID
+    if (sessionId) {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/clear-session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ session_id: sessionId }),
+      }).catch(error => {
+        console.error('Error clearing session:', error);
+      });
+    }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!inputText.trim()) return;
     
-    // Generate random number of items (between 3-6) for each category
-    const marketCount = getRandomNumber(3, 6);
-    const productCount = getRandomNumber(3, 6);
-    const techCount = getRandomNumber(3, 6);
-    
-    // Get random items for each category
-    const market = getRandomItems(marketStrings, marketCount);
-    const product = getRandomItems(productStrings, productCount);
-    const tech = getRandomItems(techStrings, techCount);
-    
-    // Update roadmap content
-    setRoadmapContent({
-      market,
-      product,
-      tech
-    });
-    
-    const updatedMessages = [
-      ...messages, 
-      {type: 'user', content: inputText},
-      {type: 'ai', content: 'Here is your roadmap based on your business description.'}
+    // Add user message immediately
+    const newMessages = [
+      ...messages,
+      {type: 'user' as const, content: inputText}
     ];
+    setMessages(newMessages);
     
-    // Update messages
-    setMessages(updatedMessages);
-    
-    // Show roadmap
-    setShowRoadmap(true);
+    // If roadmap is not shown yet, generate it
+    if (!showRoadmap) {
+      try {
+        // Add loading message
+        setMessages([
+          ...newMessages,
+          {type: 'ai' as const, content: 'Generating your roadmap...'}
+        ]);
+        
+        // Call the API to generate roadmap topics
+        const roadmapData = await generateRoadmapTopics(inputText);
+        
+        // Update roadmap content with API response
+        setRoadmapContent(roadmapData);
+        
+        // Save session ID if provided
+        if (roadmapData.session_id) {
+          setSessionId(roadmapData.session_id);
+        }
+        
+        // Update AI message with vision if available
+        if (roadmapData.vision) {
+          setMessages([
+            ...newMessages,
+            {type: 'ai' as const, content: `Here is your roadmap based on your business description. Vision: ${roadmapData.vision}`}
+          ]);
+        } else {
+          setMessages([
+            ...newMessages,
+            {type: 'ai' as const, content: 'Here is your roadmap based on your business description.'}
+          ]);
+        }
+        
+        // Show roadmap
+        setShowRoadmap(true);
+      } catch (error) {
+        console.error('Error generating roadmap:', error);
+        
+        // Update messages with error
+        setMessages([
+          ...newMessages,
+          {type: 'ai' as const, content: 'Sorry, there was an error generating your roadmap. Please try again.'}
+        ]);
+      }
+    } 
+    // If roadmap is already shown, use chat API
+    else {
+      try {
+        // Add loading message
+        setMessages([
+          ...newMessages,
+          {type: 'ai' as const, content: 'Thinking...'}
+        ]);
+        
+        // Call the chat API
+        const chatResponse = await chatWithRoadmap(
+          inputText, 
+          sessionId, 
+          !sessionId ? roadmapContent : undefined
+        );
+        
+        // Save session ID if it's new
+        if (!sessionId && chatResponse.session_id) {
+          setSessionId(chatResponse.session_id);
+        }
+        
+        // Update messages with AI response
+        setMessages([
+          ...newMessages,
+          {type: 'ai' as const, content: chatResponse.response}
+        ]);
+      } catch (error) {
+        console.error('Error chatting with roadmap:', error);
+        
+        // Update messages with error
+        setMessages([
+          ...newMessages,
+          {type: 'ai' as const, content: 'Sorry, there was an error processing your message. Please try again.'}
+        ]);
+      }
+    }
     
     // Clear input
     setInputText('');
@@ -215,6 +258,14 @@ const Home: React.FC = () => {
           </div>
         ) : (
           <div className="roadmap-container">
+            <div className="roadmap-header-container">
+              <button 
+                className="clear-button" 
+                onClick={clearSession}
+              >
+                New Roadmap
+              </button>
+            </div>
             <div className="roadmap-image">
               <div className="market-roadmap">
                 <div className="roadmap-header">
@@ -289,7 +340,7 @@ const Home: React.FC = () => {
                             end={`m${index + 1}`} 
                             color="#94a3b8" 
                             strokeWidth={2} 
-                            dashness={{stroke: 5}} 
+                            dashness={{strokeLen: 5}} 
                             headSize={5} 
                             path="straight"
                             startAnchor="right"
@@ -310,7 +361,7 @@ const Home: React.FC = () => {
                             end={`p${index + 1}`} 
                             color="#94a3b8" 
                             strokeWidth={2} 
-                            dashness={{stroke: 5}} 
+                            dashness={{strokeLen: 5}} 
                             headSize={5}
                             path="straight" 
                             startAnchor="right"
@@ -331,7 +382,7 @@ const Home: React.FC = () => {
                             end={`t${index + 1}`} 
                             color="#94a3b8" 
                             strokeWidth={2} 
-                            dashness={{stroke: 5}} 
+                            dashness={{strokeLen: 5}} 
                             headSize={5}
                             path="straight"
                             startAnchor="right"
@@ -352,7 +403,7 @@ const Home: React.FC = () => {
                             end={`m${index}`} 
                             color="#94a3b8" 
                             strokeWidth={2} 
-                            dashness={{stroke: 5}} 
+                            dashness={{strokeLen: 5}} 
                             headSize={5} 
                             path="straight"
                             startAnchor="top"
@@ -373,7 +424,7 @@ const Home: React.FC = () => {
                             end={`p${index}`} 
                             color="#94a3b8" 
                             strokeWidth={2} 
-                            dashness={{stroke: 5}} 
+                            dashness={{strokeLen: 5}} 
                             headSize={5} 
                             path="straight"
                             startAnchor="top"
@@ -403,7 +454,7 @@ const Home: React.FC = () => {
               <div className="input-container">
                 <textarea
                   className="text-input"
-                  placeholder="Ask about your roadmap..."
+                  placeholder="Ask questions about your roadmap or strategies..."
                   value={inputText}
                   onChange={handleInputChange}
                   onKeyDown={handleKeyDown}
@@ -482,6 +533,27 @@ const Home: React.FC = () => {
           flex-direction: column;
           gap: 0.5rem;
           overflow: hidden;
+        }
+        
+        .roadmap-header-container {
+          display: flex;
+          justify-content: flex-end;
+          margin-bottom: 0.5rem;
+        }
+        
+        .clear-button {
+          background-color: #f8fafc;
+          border: 1px solid #e2e8f0;
+          color: #475569;
+          font-size: 0.8rem;
+          padding: 0.5rem 1rem;
+          border-radius: 0.5rem;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        
+        .clear-button:hover {
+          background-color: #e2e8f0;
         }
 
         .roadmap-image {
